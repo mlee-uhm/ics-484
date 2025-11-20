@@ -6,12 +6,8 @@ import * as d3 from 'd3';
 const ScatterMap: React.FC = () => {
   const [dataLat, setLat] = useState<number[]>([]);
   const [dataLon, setLon] = useState<number[]>([]);
-  const [mounted, setMounted] = useState(false);
-  const containerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setMounted(true);
-
     d3.csv('/cartodb-query_1.csv').then((data: any[]) => {
       const lat: number[] = [];
       const lon: number[] = [];
@@ -20,7 +16,6 @@ const ScatterMap: React.FC = () => {
         const latitude = Number(d.point_y);
         const longitude = Number(d.point_x);
 
-        // only push valid rows
         if (
           !Number.isNaN(latitude)
           && !Number.isNaN(longitude)
@@ -39,39 +34,35 @@ const ScatterMap: React.FC = () => {
     });
   }, []);
 
-  const centerLat = d3.mean(dataLat) ?? 0;
-  const centerLon = d3.mean(dataLon) ?? 0;
+  if (dataLat.length === 0 || dataLon.length === 0) return <div>Loading...</div>;
+
+  const centerLat = d3.mean(dataLat) ?? 39.95;
+  const centerLon = d3.mean(dataLon) ?? -75.16;
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '600px' }}>
-      { mounted && (
-        <Plot
-          data={[
-            {
-              type: 'scattermapbox',
-              lat: dataLat,
-              lon: dataLon,
-              mode: 'markers',
-              marker: {
-                size: 12,
-                color: 'red',
-              },
-            },
-          ]}
-          layout={{
-            width: 800,
-            height: 600,
-            mapbox: {
-              style: 'mapbox://styles/mapbox/streets-v11',
-              center: { lat: centerLat, lon: centerLon },
-              zoom: 12,
-            },
-            margin: { t: 0, b: 0, l: 0, r: 0 },
-          }}
-          style={{ width: '100%', height: '100%' }}
-        />
-      )}
-    </div>
+    <Plot
+      data={[
+        {
+          type: 'scattermapbox',
+          lat: dataLat,
+          lon: dataLon,
+          mode: 'markers',
+          marker: { size: 12, color: 'red' },
+        },
+      ]}
+      layout={{
+        width: 800,
+        height: 600,
+        mapbox: {
+          style: 'carto-positron',
+          accesstoken:
+            'pk.eyJ1IjoibWxlZTMxaGF3YWlpZWR1IiwiYSI6ImNtaTdhY2tsMDA5Z24ybHB3djRnOGxueDIifQ.YKlvLlk7MNfrHnF-VJ8m-Q',
+          center: { lat: centerLat, lon: centerLon },
+          zoom: 12,
+        },
+        margin: { t: 0, b: 0, l: 0, r: 0 },
+      }}
+    />
   );
 };
 
