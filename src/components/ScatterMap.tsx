@@ -8,7 +8,7 @@ const ScatterMap: React.FC = () => {
   const [dataLon, setLon] = useState<number[]>([]);
 
   useEffect(() => {
-    d3.csv('/cartodb-query_1.csv').then((data: any[]) => {
+    d3.csv('cartodb-query_1.csv').then((data: any[]) => {
       const lat: number[] = [];
       const lon: number[] = [];
 
