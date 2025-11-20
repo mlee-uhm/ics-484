@@ -1,6 +1,9 @@
+'use client';
+
 /* eslint-disable max-len */
 import { Col, Container, Row } from 'react-bootstrap';
 import React from 'react';
+import ScatterMap from '@/components/ScatterMap';
 
 /** Edit this page */
 const Home = () => (
@@ -56,6 +59,9 @@ const Home = () => (
           </div>
           <div title="visualizations">
             <h3 className="text-center mb-4">Visualizations</h3>
+            <div style={{ width: '100%', height: '600px' }}>
+              <ScatterMap />
+            </div>
           </div>
           <div title="analysis-and-trends">
             <h3 className="text-center mb-4">Analysis and Trends</h3>
