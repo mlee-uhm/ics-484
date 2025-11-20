@@ -1,5 +1,4 @@
-import { Col, Container, Image, Row } from 'react-bootstrap';
-import { Paragraph } from 'react-bootstrap-icons';
+import { Col, Container, Row } from 'react-bootstrap';
 
 /** Edit this page */
 const Home = () => (
@@ -11,7 +10,6 @@ const Home = () => (
           <p>
             A web application to explore crime data in Philadelphia.
           </p>
-          
         </Col>
       </Row>
     </Container>
