@@ -1,17 +1,17 @@
 import { Col, Container, Image, Row } from 'react-bootstrap';
+import { Paragraph } from 'react-bootstrap-icons';
 
-/** The Home page. */
+/** Edit this page */
 const Home = () => (
   <main>
-    <Container id="landing-page" fluid className="py-3">
-      <Row className="align-middle text-center">
-        <Col xs={4}>
-          <Image src="next.svg" width="150px" alt="" />
-        </Col>
-
-        <Col xs={8} className="d-flex flex-column justify-content-center">
-          <h1>Welcome to this template</h1>
-          <p>Now get to work and modify this app!</p>
+    <Container className="my-5">
+      <Row className="align-items-center">
+        <Col className="text-center">
+          <h1>Philadelphia Crime</h1>
+          <p>
+            A web application to explore crime data in Philadelphia.
+          </p>
+          
         </Col>
       </Row>
     </Container>
