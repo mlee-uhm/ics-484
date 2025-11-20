@@ -3,7 +3,11 @@
 /* eslint-disable max-len */
 import { Col, Container, Row } from 'react-bootstrap';
 import React from 'react';
-import ScatterMap from '@/components/ScatterMap';
+import dynamic from 'next/dynamic';
+
+const ScatterMap = dynamic(() => import('../components/ScatterMap'), {
+  ssr: false,
+});
 
 /** Edit this page */
 const Home = () => (
@@ -26,12 +30,12 @@ const Home = () => (
             </p>
             <p>
               Team Members:
-              <ul>
-                <li>Hunter Von Tungeln - Team Lead</li>
-                <li>Tyler Mak - Data Scientist</li>
-                <li>Michael Lee - Front End Designer</li>
-              </ul>
             </p>
+            <ul>
+              <li>Hunter Von Tungeln - Team Lead</li>
+              <li>Tyler Mak - Data Scientist</li>
+              <li>Michael Lee - Front End Designer</li>
+            </ul>
           </div>
           <div title="our-mission">
             <h3 className="text-center mb-4">Our Mission</h3>
@@ -45,13 +49,13 @@ const Home = () => (
             </p>
             <p>
               The goal of this website is to:
-              <ul>
-                <li>Provide transparency around crime data in Philadelphia</li>
-                <li>Help local residents understand crime trends in their communities</li>
-                <li>Support policymakers and law enforcement in making informed decisions</li>
-                <li>Supply researchers with information about crime patterns and factors</li>
-              </ul>
             </p>
+            <ul>
+              <li>Provide transparency around crime data in Philadelphia</li>
+              <li>Help local residents understand crime trends in their communities</li>
+              <li>Support policymakers and law enforcement in making informed decisions</li>
+              <li>Supply researchers with information about crime patterns and factors</li>
+            </ul>
             <p>
               Our mission is to make reliable information available to everyone working
               to build a safer Philadelphia.
@@ -59,9 +63,7 @@ const Home = () => (
           </div>
           <div title="visualizations">
             <h3 className="text-center mb-4">Visualizations</h3>
-            <div style={{ width: '100%', height: '600px' }}>
-              <ScatterMap />
-            </div>
+            <ScatterMap />
           </div>
           <div title="analysis-and-trends">
             <h3 className="text-center mb-4">Analysis and Trends</h3>

@@ -1,3 +1,5 @@
+'use client';
+
 /* eslint-disable import/no-extraneous-dependencies */
 import React, { useState, useEffect } from 'react';
 import Plot from 'react-plotly.js';
@@ -8,17 +10,21 @@ const ScatterMap: React.FC = () => {
   const [dataLon, setLon] = useState<number[]>([]);
 
   useEffect(() => {
-    d3.csv('cartodb-query_1.csv').then((data: any[]) => {
+    d3.csv('/cartodb-query_1.csv').then((data: any[]) => {
       const lat: number[] = [];
       const lon: number[] = [];
 
-      data.forEach((d) => {
-        const latitude = Number(d.point_y);
-        const longitude = Number(d.point_x);
+      const sample = d3.shuffle(data).slice(0, 1000);
+
+      sample.forEach((d) => {
+        const latitude = Number(d.point_y?.trim());
+        const longitude = Number(d.point_x?.trim());
 
         if (
           !Number.isNaN(latitude)
           && !Number.isNaN(longitude)
+          && latitude !== 0 // 🚫 filter out bad rows
+          && longitude !== 0
           && latitude >= -90
           && latitude <= 90
           && longitude >= -180
@@ -34,33 +40,40 @@ const ScatterMap: React.FC = () => {
     });
   }, []);
 
-  if (dataLat.length === 0 || dataLon.length === 0) return <div>Loading...</div>;
+  // Render nothing until data is ready to avoid hydration mismatch
+  if (dataLat.length === 0 || dataLon.length === 0) return null;
 
-  const centerLat = d3.mean(dataLat) ?? 39.95;
-  const centerLon = d3.mean(dataLon) ?? -75.16;
+  const minLat = d3.min(dataLat) ?? 39.95;
+  const maxLat = d3.max(dataLat) ?? 39.95;
+  const minLon = d3.min(dataLon) ?? -75.16;
+  const maxLon = d3.max(dataLon) ?? -75.16;
+
+  const centerLat = (minLat + maxLat) / 2;
+  const centerLon = (minLon + maxLon) / 2;
 
   return (
     <Plot
       data={[
         {
-          type: 'scattermapbox',
+          type: 'scattermap', // ✅ new MapLibre trace type
           lat: dataLat,
           lon: dataLon,
           mode: 'markers',
-          marker: { size: 12, color: 'red' },
+          marker: { size: 8, color: 'red' },
         },
       ]}
       layout={{
         width: 800,
         height: 600,
-        mapbox: {
-          style: 'carto-positron',
-          accesstoken:
-            'pk.eyJ1IjoibWxlZTMxaGF3YWlpZWR1IiwiYSI6ImNtaTdhY2tsMDA5Z24ybHB3djRnOGxueDIifQ.YKlvLlk7MNfrHnF-VJ8m-Q',
+        map: {
+          style: 'open-street-map', // ✅ free tile style
           center: { lat: centerLat, lon: centerLon },
-          zoom: 12,
+          zoom: 10,
         },
         margin: { t: 0, b: 0, l: 0, r: 0 },
+      }}
+      config={{
+        responsive: true, // ✅ no Mapbox token needed
       }}
     />
   );
