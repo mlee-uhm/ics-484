@@ -63,8 +63,8 @@ const ScatterMap: React.FC = () => {
         },
       ]}
       layout={{
-        width: 800,
-        height: 600,
+        width: 2000,
+        height: 800,
         map: {
           style: 'open-street-map', // ✅ free tile style
           center: { lat: centerLat, lon: centerLon },
