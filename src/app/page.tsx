@@ -1,9 +1,10 @@
 'use client';
 
 /* eslint-disable max-len */
-import { Container, Row } from 'react-bootstrap';
+import { Row, Col } from 'react-bootstrap';
 import React from 'react';
 import dynamic from 'next/dynamic';
+import Sidebar from '../components/Sidebar';
 
 const ScatterMap = dynamic(() => import('../components/ScatterMap'), {
   ssr: false,
@@ -11,13 +12,14 @@ const ScatterMap = dynamic(() => import('../components/ScatterMap'), {
 
 /** Edit this page */
 const Home = () => (
-  <Container className="">
-    <Row className="justify-content-center">
-      <div className="d-flex justify-content-center">
-        <ScatterMap />
-      </div>
-    </Row>
-  </Container>
+  <Row className="g-0" style={{ height: '100vh' }}>
+    <Col xs="auto">
+      <Sidebar />
+    </Col>
+    <Col style={{ height: '100vh', overflow: 'hidden' }}>
+      <ScatterMap />
+    </Col>
+  </Row>
 );
 
 export default Home;
