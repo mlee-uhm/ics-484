@@ -19,7 +19,7 @@ const HourlyChart: React.FC<ChartProps> = ({ data }) => {
     const hourCounts = d3.rollup(
       data,
       (v) => v.length,
-      (d) => Number(d.hour)
+      (d) => Number(d.hour),
     );
 
     const sortedData = Array.from(hourCounts).sort((a, b) => a[0] - b[0]);
@@ -30,27 +30,27 @@ const HourlyChart: React.FC<ChartProps> = ({ data }) => {
 
   return (
     <Plot
-      data={[{ 
-        type: 'bar', 
-        x: xValues, 
-        y: yValues, 
-        marker: { color: '#3b82f6' } 
+      data={[{
+        type: 'bar',
+        x: xValues,
+        y: yValues,
+        marker: { color: '#3b82f6' },
       }]}
       layout={{
         // ✅ FIX 1: Main title must be an object
         title: { text: 'Incidents by Hour' },
-        
-        xaxis: { 
+
+        xaxis: {
           // ✅ FIX 2: Axis title must be an object
-          title: { text: 'Hour (24h)' }, 
-          tickmode: 'linear', 
-          dtick: 1 
+          title: { text: 'Hour (24h)' },
+          tickmode: 'linear',
+          dtick: 1,
         },
-        yaxis: { 
+        yaxis: {
           // ✅ FIX 3: Axis title must be an object
-          title: { text: 'Count' } 
+          title: { text: 'Count' },
         },
-        
+
         width: 500,
         height: 300,
         margin: { t: 40, b: 40, l: 40, r: 20 },

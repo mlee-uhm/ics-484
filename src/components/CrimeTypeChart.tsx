@@ -19,7 +19,7 @@ const CrimeTypeChart: React.FC<ChartProps> = ({ data }) => {
     const typeCounts = d3.rollup(
       data,
       (v) => v.length,
-      (d) => d.text_general_code || 'Unknown'
+      (d) => d.text_general_code || 'Unknown',
     );
 
     // Sort and take Top 10
