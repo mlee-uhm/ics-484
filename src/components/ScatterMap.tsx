@@ -23,7 +23,7 @@ const ScatterMap: React.FC = () => {
         if (
           !Number.isNaN(latitude)
           && !Number.isNaN(longitude)
-          && latitude !== 0 // 🚫 filter out bad rows
+          && latitude !== 0
           && longitude !== 0
           && latitude >= -90
           && latitude <= 90
@@ -40,7 +40,6 @@ const ScatterMap: React.FC = () => {
     });
   }, []);
 
-  // Render nothing until data is ready to avoid hydration mismatch
   if (dataLat.length === 0 || dataLon.length === 0) return null;
 
   const minLat = d3.min(dataLat) ?? 39.95;
@@ -52,30 +51,32 @@ const ScatterMap: React.FC = () => {
   const centerLon = (minLon + maxLon) / 2;
 
   return (
-    <Plot
-      data={[
-        {
-          type: 'scattermap', // ✅ new MapLibre trace type
-          lat: dataLat,
-          lon: dataLon,
-          mode: 'markers',
-          marker: { size: 8, color: 'red' },
-        },
-      ]}
-      layout={{
-        width: 2000,
-        height: 800,
-        map: {
-          style: 'open-street-map', // ✅ free tile style
-          center: { lat: centerLat, lon: centerLon },
-          zoom: 10,
-        },
-        margin: { t: 0, b: 0, l: 0, r: 0 },
-      }}
-      config={{
-        responsive: true, // ✅ no Mapbox token needed
-      }}
-    />
+    <div style={{ width: '100%', height: '100vh' }}>
+      <Plot
+        data={[
+          {
+            type: 'scattermap',
+            lat: dataLat,
+            lon: dataLon,
+            mode: 'markers',
+            marker: { size: 8, color: 'red' },
+          },
+        ]}
+        layout={{
+          autosize: true,
+          map: {
+            style: 'open-street-map',
+            center: { lat: centerLat, lon: centerLon },
+            zoom: 10,
+          },
+          margin: { t: 0, b: 0, l: 0, r: 0 },
+        }}
+        config={{
+          responsive: true,
+        }}
+        style={{ width: '100%', height: '100%' }}
+      />
+    </div>
   );
 };
 
