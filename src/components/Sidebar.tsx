@@ -26,12 +26,19 @@ export default function Sidebar() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   return (
-    <nav className={`shadow-md h-screen duration-500 ${isOpen ? 'w-60' : 'w-16'}`} style={{ display: 'flex', flexDirection: 'column' }}>
+    <nav
+      className={`shadow-md h-screen duration-500 ${isOpen ? 'w-60' : 'w-16'}`}
+      style={{ display: 'flex', flexDirection: 'column' }}
+    >
       <div className="border px-3 py-2 h-20 flex justify-between items-center">
-        <MdMenuOpen 
-          size={24} 
-          onClick={() => setIsOpen(!isOpen)} 
-          style={{ cursor: 'pointer', transform: isOpen ? 'rotate(0deg)' : 'rotate(180deg)', transition: 'transform 0.3s' }}
+        <MdMenuOpen
+          size={24}
+          onClick={() => setIsOpen(!isOpen)}
+          style={{
+            cursor: 'pointer',
+            transform: isOpen ? 'rotate(0deg)' : 'rotate(180deg)',
+            transition: 'transform 0.3s',
+          }}
         />
       </div>
       <ul style={{
@@ -48,6 +55,7 @@ export default function Sidebar() {
         {
           menuItems.map((item, index) => (
             <li
+              // eslint-disable-next-line react/no-array-index-key
               key={index}
               className="py-2 duration-300 cursor-pointer"
               onMouseEnter={() => setHoveredIndex(index)}
