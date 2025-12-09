@@ -37,24 +37,30 @@ const HourlyChart: React.FC<ChartProps> = ({ data }) => {
         marker: { color: '#3b82f6' },
       }]}
       layout={{
-        // ✅ FIX 1: Main title must be an object
         title: { text: 'Incidents by Hour' },
 
+        // FIX 1: Add automargin so labels push the chart area instead of getting cut
         xaxis: {
-          // ✅ FIX 2: Axis title must be an object
           title: { text: 'Hour (24h)' },
           tickmode: 'linear',
           dtick: 1,
+          automargin: true,
         },
         yaxis: {
-          // ✅ FIX 3: Axis title must be an object
           title: { text: 'Count' },
+          automargin: true,
         },
 
-        width: 500,
-        height: 300,
-        margin: { t: 40, b: 40, l: 40, r: 20 },
+        // FIX 2: Ensure layout is responsive
+        autosize: true,
+        height: 400, // Matches your other chart
+
+        // FIX 3: Increase top margin (t) so the highest bars don't hit the title
+        margin: { t: 50, b: 40, l: 50, r: 20 },
       }}
+      // FIX 4: Vital for responsiveness in flex containers
+      useResizeHandler
+      style={{ width: '100%', height: '100%' }}
       config={{ responsive: true }}
     />
   );

@@ -34,14 +34,31 @@ const CrimeTypeChart: React.FC<ChartProps> = ({ data }) => {
 
   return (
     <Plot
-      data={[{ type: 'bar', x: values, y: labels, orientation: 'h', marker: { color: '#ef4444' } }]}
+      data={[{
+        type: 'bar',
+        x: values,
+        y: labels,
+        orientation: 'h',
+        marker: { color: '#ef4444' },
+      }]}
       layout={{
         title: { text: 'Top 10 Incident Types' },
-        margin: { l: 150 }, // Space for labels
-        width: 500,
-        height: 300,
+
+        // FIX: Add automargin to the y-axis
+        yaxis: {
+          automargin: true,
+          tickfont: { size: 10 }, // Optional: make text slightly smaller if needed
+        },
+
+        // FIX: Remove the hardcoded 'width' so it fits the container
+        // width: 500,
+        height: 400, // Increased height slightly to give bars breathing room
+
+        // You can keep a small default margin, automargin will expand it if needed
+        margin: { l: 50, r: 20, t: 40, b: 40 },
       }}
       config={{ responsive: true }}
+      style={{ width: '100%' }} // Ensures chart fills the container width
     />
   );
 };
