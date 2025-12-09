@@ -5,7 +5,6 @@ import Plot from 'react-plotly.js';
 import * as d3 from 'd3';
 import * as turf from '@turf/turf';
 import { Col } from 'react-bootstrap';
-import { Data } from 'plotly.js'; // Helper type for Plot data
 
 import { FeatureCollection, Feature, Polygon } from 'geojson';
 
