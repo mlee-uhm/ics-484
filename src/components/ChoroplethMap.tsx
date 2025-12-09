@@ -32,7 +32,7 @@ interface DistrictValue {
 const ChoroplethMap: React.FC = () => {
   const [geoData, setGeoData] = useState<DistrictGeoJSON | null>(null);
   const [crimeDistrictValues, setCrimeDistrictValues] = useState<
-    Record<string, DistrictValue[]>
+  Record<string, DistrictValue[]>
   >({});
   const [selectedCrime, setSelectedCrime] = useState<string>('');
 
@@ -64,22 +64,21 @@ const ChoroplethMap: React.FC = () => {
               if (turf.booleanPointInPolygon(point, feature)) {
                 const districtId = String(feature.properties.dist_numc);
                 if (!crimeCounts[crimeType]) crimeCounts[crimeType] = {};
-                crimeCounts[crimeType][districtId] =
-                  (crimeCounts[crimeType][districtId] || 0) + 1;
+                crimeCounts[crimeType][districtId] = (crimeCounts[crimeType][districtId] || 0) + 1;
               }
             });
           }
         });
 
         const valuesByCrime: Record<string, DistrictValue[]> = {};
-        
+
         Object.keys(crimeCounts).forEach((crimeType) => {
           valuesByCrime[crimeType] = geojson.features.map(
             (f: DistrictFeature) => ({
               id: String(f.properties.dist_numc),
               value:
                 crimeCounts[crimeType][String(f.properties.dist_numc)] || 0,
-            })
+            }),
           );
         });
 
@@ -131,11 +130,12 @@ const ChoroplethMap: React.FC = () => {
           width: '100%',
         }}
       >
-        <label 
-          htmlFor="crime-type-select" 
+        <label
+          htmlFor="crime-type-select"
           style={{ margin: 0, fontWeight: 'bold' }}
         >
-          Select crime type:{' '}
+          Select crime type:
+          {' '}
         </label>
         <select
           id="crime-type-select"
