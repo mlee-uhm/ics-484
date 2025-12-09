@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import Plot from 'react-plotly.js';
 import * as d3 from 'd3';
 import * as turf from '@turf/turf';
-import {Col} from 'react-bootstrap';
+import { Col } from 'react-bootstrap';
 
 import { FeatureCollection, Feature, Polygon } from 'geojson';
 
@@ -85,51 +85,51 @@ const ChoroplethMap: React.FC = () => {
 
   return (
     <Col>
-    <div>
-      {/* Dropdown selector */}
-      <label>
-        Select crime type:
-        {' '}
-        <select
-          value={selectedCrime}
-          onChange={(e) => setSelectedCrime(e.target.value)}
-        >
-          {Object.keys(crimeDistrictValues).map((crime) => (
-            <option key={crime} value={crime}>
-              {crime}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div>
+        {/* Dropdown selector */}
+        <label>
+          Select crime type:
+          {' '}
+          <select
+            value={selectedCrime}
+            onChange={(e) => setSelectedCrime(e.target.value)}
+          >
+            {Object.keys(crimeDistrictValues).map((crime) => (
+              <option key={crime} value={crime}>
+                {crime}
+              </option>
+            ))}
+          </select>
+        </label>
 
-      {/* Choropleth map */}
-      <div style={{ width: '100%', height: '100vh' }}>
-      <Plot
-        data={[
-          {
-            type: 'choroplethmapbox',
-            geojson: geoData,
-            locations: districtValues.map((d) => d.id),
-            z: districtValues.map((d) => d.value),
-            featureidkey: 'properties.dist_numc',
-            colorscale: 'Reds',
-            marker: { line: { width: 0 } },
-          } as any,
-        ]}
-        layout={{
-          width: 800,
-          height: 600,
-          mapbox: {
-            style: 'carto-positron',
-            center: { lat: 39.95, lon: -75.16 }, // Philly
-            zoom: 10,
-          },
-          margin: { t: 0, b: 0, l: 0, r: 0 },
-        }}
-        config={{ responsive: true }}
-      />
-    </div>
-    </div>
+        {/* Choropleth map */}
+        <div style={{ width: '100%', height: '100vh' }}>
+          <Plot
+            data={[
+              {
+                type: 'choroplethmapbox',
+                geojson: geoData,
+                locations: districtValues.map((d) => d.id),
+                z: districtValues.map((d) => d.value),
+                featureidkey: 'properties.dist_numc',
+                colorscale: 'Reds',
+                marker: { line: { width: 0 } },
+              } as any,
+            ]}
+            layout={{
+              width: 800,
+              height: 600,
+              mapbox: {
+                style: 'carto-positron',
+                center: { lat: 39.95, lon: -75.16 }, // Philly
+                zoom: 10,
+              },
+              margin: { t: 0, b: 0, l: 0, r: 0 },
+            }}
+            config={{ responsive: true }}
+          />
+        </div>
+      </div>
     </Col>
 
   );

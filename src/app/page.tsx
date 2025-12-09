@@ -28,7 +28,7 @@ const HourlyChart = dynamic(() => import('@/components/HourlyChart'), {
 const Home = () => {
   // 1. State to track the active view
   const [currentView, setCurrentView] = useState<'choropleth' | 'bar' | 'scatter'>('choropleth');
-  
+
   // 2. State for data (needed for the Bar Chart)
   const [data, setData] = useState<any[]>([]);
 
