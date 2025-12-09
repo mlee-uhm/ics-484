@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import { MdMenuOpen, MdBarChart } from 'react-icons/md';
 import { FaMap } from 'react-icons/fa';
-import { FaChartSimple } from 'react-icons/fa6';
+import { FaChartLine } from 'react-icons/fa6';
 
 // 1. Define valid view types
-type ViewType = 'choropleth' | 'bar' | 'scatter';
+type ViewType = 'choropleth' | 'bar' | 'trends';
 
 interface SidebarProps {
   onViewChange: (view: ViewType) => void;
 }
 
-// 2. Strongly type the menu items
 const menuItems: { icons: React.ReactNode; label: string; view: ViewType }[] = [
   {
     icons: <FaMap size={20} />,
@@ -19,13 +18,13 @@ const menuItems: { icons: React.ReactNode; label: string; view: ViewType }[] = [
   },
   {
     icons: <MdBarChart size={20} />,
-    label: 'Frequency Related Stats',
+    label: 'Frequency Stats',
     view: 'bar',
   },
   {
-    icons: <FaChartSimple size={20} />,
-    label: 'Trend Related Stats',
-    view: 'scatter',
+    icons: <FaChartLine size={20} />,
+    label: 'Trends Across Time',
+    view: 'trends', // Renamed from 'scatter'
   },
 ];
 
