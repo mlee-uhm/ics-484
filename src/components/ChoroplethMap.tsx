@@ -1,8 +1,14 @@
+/* eslint-disable jsx-a11y/label-has-associated-control */
+/* eslint-disable import/no-extraneous-dependencies */
+
 'use client';
+
 import React, { useState, useEffect } from 'react';
 import Plot from 'react-plotly.js';
 import * as d3 from 'd3';
 import * as turf from '@turf/turf';
+import {Col} from 'react-bootstrap';
+
 import { FeatureCollection, Feature, Polygon } from 'geojson';
 
 interface DistrictProperties {
@@ -16,7 +22,7 @@ type DistrictGeoJSON = FeatureCollection<Polygon, DistrictProperties>;
 const ChoroplethMap: React.FC = () => {
   const [geoData, setGeoData] = useState<DistrictGeoJSON | null>(null);
   const [crimeDistrictValues, setCrimeDistrictValues] = useState<
-    Record<string, { id: string; value: number }[]>
+  Record<string, { id: string; value: number }[]>
   >({});
   const [selectedCrime, setSelectedCrime] = useState<string>('');
 
@@ -41,14 +47,13 @@ const ChoroplethMap: React.FC = () => {
           const lon = parseFloat(row.point_x);
           const lat = parseFloat(row.point_y);
 
-          if (!isNaN(lon) && !isNaN(lat)) {
+          if (!Number.isNaN(lon) && !Number.isNaN(lat)) {
             const point = turf.point([lon, lat]);
             geojson.features.forEach((feature: DistrictFeature) => {
               if (turf.booleanPointInPolygon(point, feature)) {
                 const districtId = String(feature.properties.dist_numc);
                 if (!crimeCounts[crimeType]) crimeCounts[crimeType] = {};
-                crimeCounts[crimeType][districtId] =
-                  (crimeCounts[crimeType][districtId] || 0) + 1;
+                crimeCounts[crimeType][districtId] = (crimeCounts[crimeType][districtId] || 0) + 1;
               }
             });
           }
@@ -79,10 +84,12 @@ const ChoroplethMap: React.FC = () => {
   const districtValues = crimeDistrictValues[selectedCrime] || [];
 
   return (
+    <Col>
     <div>
       {/* Dropdown selector */}
       <label>
-        Select crime type:{' '}
+        Select crime type:
+        {' '}
         <select
           value={selectedCrime}
           onChange={(e) => setSelectedCrime(e.target.value)}
@@ -96,6 +103,7 @@ const ChoroplethMap: React.FC = () => {
       </label>
 
       {/* Choropleth map */}
+      <div style={{ width: '100%', height: '100vh' }}>
       <Plot
         data={[
           {
@@ -121,6 +129,9 @@ const ChoroplethMap: React.FC = () => {
         config={{ responsive: true }}
       />
     </div>
+    </div>
+    </Col>
+
   );
 };
 

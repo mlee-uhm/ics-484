@@ -4,12 +4,26 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col } from 'react-bootstrap';
 import * as d3 from 'd3';
-
-// Import your components
-import ChoroplethMap from '@/components/ChoroplethMap';
-import ScatterMap from '@/components/ScatterMap'; // Make sure this path is correct
-import HourlyChart from '@/components/HourlyChart'; // Make sure this path is correct
+import dynamic from 'next/dynamic';
 import Sidebar from '../components/Sidebar';
+
+// FIX: Dynamically load ALL Plotly components with ssr: false
+// This prevents "ReferenceError: self is not defined" during server rendering
+
+const ChoroplethMap = dynamic(() => import('@/components/ChoroplethMap'), {
+  ssr: false,
+  loading: () => <div className="p-4">Loading Choropleth Map...</div>,
+});
+
+const ScatterMap = dynamic(() => import('@/components/ScatterMap'), {
+  ssr: false,
+  loading: () => <div className="p-4">Loading Scatter Map...</div>,
+});
+
+const HourlyChart = dynamic(() => import('@/components/HourlyChart'), {
+  ssr: false,
+  loading: () => <div className="p-4">Loading Chart...</div>,
+});
 
 const Home = () => {
   // 1. State to track the active view
