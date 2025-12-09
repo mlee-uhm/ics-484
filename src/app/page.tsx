@@ -1,6 +1,13 @@
 /* eslint-disable max-len */
+'use client';
 import { Col, Container, Row } from 'react-bootstrap';
 import React from 'react';
+import dynamic from 'next/dynamic';
+import ChoroplethMap from '@/components/ChoroplethMap';
+
+const ScatterMap = dynamic(() => import('../components/ScatterMap'), {
+  ssr: false,
+});
 
 /** Edit this page */
 const Home = () => (
@@ -56,6 +63,7 @@ const Home = () => (
           </div>
           <div title="visualizations">
             <h3 className="text-center mb-4">Visualizations</h3>
+             <ChoroplethMap />
           </div>
           <div title="analysis-and-trends">
             <h3 className="text-center mb-4">Analysis and Trends</h3>
