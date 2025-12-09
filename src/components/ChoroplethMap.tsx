@@ -13,7 +13,7 @@ import { FeatureCollection, Feature, Polygon } from 'geojson';
 
 interface DistrictProperties {
   dist_numc: string | number;
-  [key: string]: any; // allow other properties
+  [key: string]: any;
 }
 
 type DistrictFeature = Feature<Polygon, DistrictProperties>;
@@ -22,7 +22,7 @@ type DistrictGeoJSON = FeatureCollection<Polygon, DistrictProperties>;
 const ChoroplethMap: React.FC = () => {
   const [geoData, setGeoData] = useState<DistrictGeoJSON | null>(null);
   const [crimeDistrictValues, setCrimeDistrictValues] = useState<
-  Record<string, { id: string; value: number }[]>
+    Record<string, { id: string; value: number }[]>
   >({});
   const [selectedCrime, setSelectedCrime] = useState<string>('');
 
@@ -53,24 +53,27 @@ const ChoroplethMap: React.FC = () => {
               if (turf.booleanPointInPolygon(point, feature)) {
                 const districtId = String(feature.properties.dist_numc);
                 if (!crimeCounts[crimeType]) crimeCounts[crimeType] = {};
-                crimeCounts[crimeType][districtId] = (crimeCounts[crimeType][districtId] || 0) + 1;
+                crimeCounts[crimeType][districtId] =
+                  (crimeCounts[crimeType][districtId] || 0) + 1;
               }
             });
           }
         });
 
-        // Convert to districtValues arrays per crime type
-        const valuesByCrime: Record<string, { id: string; value: number }[]> = {};
+        const valuesByCrime: Record<string, { id: string; value: number }[]> =
+          {};
         Object.keys(crimeCounts).forEach((crimeType) => {
-          valuesByCrime[crimeType] = geojson.features.map((f: DistrictFeature) => ({
-            id: String(f.properties.dist_numc),
-            value: crimeCounts[crimeType][String(f.properties.dist_numc)] || 0,
-          }));
+          valuesByCrime[crimeType] = geojson.features.map(
+            (f: DistrictFeature) => ({
+              id: String(f.properties.dist_numc),
+              value:
+                crimeCounts[crimeType][String(f.properties.dist_numc)] || 0,
+            })
+          );
         });
 
         setCrimeDistrictValues(valuesByCrime);
 
-        // Default to the first crime type
         const firstCrime = Object.keys(valuesByCrime)[0];
         if (firstCrime) setSelectedCrime(firstCrime);
       })
@@ -84,15 +87,34 @@ const ChoroplethMap: React.FC = () => {
   const districtValues = crimeDistrictValues[selectedCrime] || [];
 
   return (
-    <Col>
-      <div>
-        {/* Dropdown selector */}
-        <label>
+    <Col
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        width: '100%',
+      }}
+    >
+      {/* Centered Dropdown Container 
+        Added flex centering and a light background for visual separation
+      */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center', // Centers horizontally
+          alignItems: 'center', // Centers vertically
+          padding: '10px',
+          backgroundColor: '#f8f9fa', 
+          width: '100%'
+        }}
+      >
+        <label style={{ margin: 0, fontWeight: 'bold' }}>
           Select crime type:
           {' '}
           <select
             value={selectedCrime}
             onChange={(e) => setSelectedCrime(e.target.value)}
+            style={{ marginLeft: '10px' }}
           >
             {Object.keys(crimeDistrictValues).map((crime) => (
               <option key={crime} value={crime}>
@@ -101,37 +123,46 @@ const ChoroplethMap: React.FC = () => {
             ))}
           </select>
         </label>
+      </div>
 
-        {/* Choropleth map */}
-        <div style={{ width: '100%', height: '100vh' }}>
-          <Plot
-            data={[
-              {
-                type: 'choroplethmapbox',
-                geojson: geoData,
-                locations: districtValues.map((d) => d.id),
-                z: districtValues.map((d) => d.value),
-                featureidkey: 'properties.dist_numc',
-                colorscale: 'Reds',
-                marker: { line: { width: 0 } },
-              } as any,
-            ]}
-            layout={{
-              width: 800,
-              height: 600,
-              mapbox: {
-                style: 'carto-positron',
-                center: { lat: 39.95, lon: -75.16 }, // Philly
-                zoom: 10,
-              },
-              margin: { t: 0, b: 0, l: 0, r: 0 },
-            }}
-            config={{ responsive: true }}
-          />
-        </div>
+      {/* Map Container - Flexible height */}
+      <div
+        style={{
+          flex: 1, // Grow to fill remaining space
+          position: 'relative',
+          width: '100%',
+          minHeight: 0, // Prevent overflow
+        }}
+      >
+        <Plot
+          data={[
+            {
+              type: 'choroplethmapbox',
+              geojson: geoData,
+              locations: districtValues.map((d) => d.id),
+              z: districtValues.map((d) => d.value),
+              featureidkey: 'properties.dist_numc',
+              colorscale: 'Reds',
+              marker: { line: { width: 0 } },
+              zmin: 0,
+            } as any,
+          ]}
+          // Make the plot responsive and fill the div
+          style={{ width: '100%', height: '100%' }}
+          useResizeHandler={true}
+          layout={{
+            autosize: true,
+            mapbox: {
+              style: 'carto-positron',
+              center: { lat: 40.00, lon: -75.13 }, // Philly
+              zoom: 10,
+            },
+            margin: { t: 0, b: 0, l: 0, r: 0 },
+          }}
+          config={{ responsive: true }}
+        />
       </div>
     </Col>
-
   );
 };
 
