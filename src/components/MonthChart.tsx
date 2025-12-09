@@ -14,14 +14,15 @@ const MonthChart: React.FC<ChartProps> = ({ data, title = 'Crimes per Month' }) 
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return { x: [], y: [] };
 
-    // Group by Month (01 to 12)
-    // Assumes dispatch_date format YYYY-MM-DD
+    // Group by Month using STRING parsing (Timezone Safe)
     const monthCounts = d3.rollup(
       data,
       (v) => v.length,
       (d) => {
-        const date = new Date(d.dispatch_date);
-        return date.getMonth(); // 0 = Jan, 11 = Dec
+        if (!d.dispatch_date) return -1;
+        // Parse "YYYY-MM-DD" -> grab "MM" -> convert to 0-11 index
+        const monthPart = d.dispatch_date.split('-')[1];
+        return parseInt(monthPart, 10) - 1;
       },
     );
 
@@ -30,7 +31,7 @@ const MonthChart: React.FC<ChartProps> = ({ data, title = 'Crimes per Month' }) 
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
 
-    // Ensure all 12 months are present, even if count is 0
+    // Ensure all 12 months are present
     const x = monthNames;
     const y = monthNames.map((_, index) => monthCounts.get(index) || 0);
 
@@ -39,14 +40,12 @@ const MonthChart: React.FC<ChartProps> = ({ data, title = 'Crimes per Month' }) 
 
   return (
     <Plot
-      data={[
-        {
-          type: 'bar',
-          x: chartData.x,
-          y: chartData.y,
-          marker: { color: '#82ca9d' },
-        },
-      ]}
+      data={[{
+        type: 'bar',
+        x: chartData.x,
+        y: chartData.y,
+        marker: { color: '#82ca9d' },
+      }]}
       layout={{
         title: { text: title },
         xaxis: { title: { text: 'Month' }, automargin: true },

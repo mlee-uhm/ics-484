@@ -12,21 +12,19 @@ const DayOfWeekChart: React.FC<ChartProps> = ({ data }) => {
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return { x: [], y: [] };
 
-    // 1. Define Day Order
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-    // 2. Group by Day Index (0 = Sunday, 1 = Monday...)
     const dayCounts = d3.rollup(
       data,
       (v) => v.length,
-      (d) =>
-        // Append time to ensure local timezone doesn't shift the day
-        // eslint-disable-next-line implicit-arrow-linebreak
-        new Date(`${d.dispatch_date}T00:00`).getDay(),
-
+      (d) => {
+        if (!d.dispatch_date) return -1;
+        // FIX: Append "T12:00:00" to force the date to Noon.
+        // Even if timezone shifts by -5 or -8 hours, it stays on the same day.
+        return new Date(`${d.dispatch_date}T12:00:00`).getDay();
+      },
     );
 
-    // 3. Map counts to days (fill missing days with 0)
     const x = days;
     const y = x.map((_, i) => dayCounts.get(i) || 0);
 
@@ -39,7 +37,7 @@ const DayOfWeekChart: React.FC<ChartProps> = ({ data }) => {
         type: 'bar',
         x: chartData.x,
         y: chartData.y,
-        marker: { color: '#ffc658' }, // Golden yellow color
+        marker: { color: '#ffc658' },
       }]}
       layout={{
         title: { text: 'Incidents by Day of Week' },
