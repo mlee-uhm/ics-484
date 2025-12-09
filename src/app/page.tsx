@@ -12,17 +12,53 @@ import Sidebar from '../components/Sidebar';
 
 const ChoroplethMap = dynamic(() => import('@/components/ChoroplethMap'), {
   ssr: false,
-  loading: () => <div className="p-4">Loading Choropleth Map...</div>,
+  loading: () => (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        width: '100%',
+      }}
+    >
+      Loading Choropleth Map...
+    </div>
+  ),
 });
 
 const ScatterMap = dynamic(() => import('@/components/ScatterMap'), {
   ssr: false,
-  loading: () => <div className="p-4">Loading Scatter Map...</div>,
+  loading: () => (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        width: '100%',
+      }}
+    >
+      Loading Scatter Map...
+    </div>
+  ),
 });
 
 const HourlyChart = dynamic(() => import('@/components/HourlyChart'), {
   ssr: false,
-  loading: () => <div className="p-4">Loading Chart...</div>,
+  loading: () => (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        width: '100%',
+      }}
+    >
+      Loading Charts...
+    </div>
+  ),
 });
 
 const Home = () => {

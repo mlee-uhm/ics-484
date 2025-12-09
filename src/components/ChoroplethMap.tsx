@@ -91,7 +91,21 @@ const ChoroplethMap: React.FC = () => {
       });
   }, []);
 
-  if (!geoData) return <div>Loading map...</div>;
+  if (!geoData) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          width: '100%',
+        }}
+      >
+        Loading Choropleth Map...
+      </div>
+    );
+  }
 
   const districtValues = crimeDistrictValues[selectedCrime] || [];
 
