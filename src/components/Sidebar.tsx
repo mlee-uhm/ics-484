@@ -19,12 +19,12 @@ const menuItems: { icons: React.ReactNode; label: string; view: ViewType }[] = [
   },
   {
     icons: <MdBarChart size={20} />,
-    label: 'Hourly Bar Chart',
+    label: 'Frequency Related Stats',
     view: 'bar',
   },
   {
     icons: <FaChartSimple size={20} />,
-    label: 'Scatter Map',
+    label: 'Trend Related Stats',
     view: 'scatter',
   },
 ];
