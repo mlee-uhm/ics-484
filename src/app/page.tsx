@@ -11,36 +11,21 @@ import Sidebar from '../components/Sidebar';
 const ChoroplethMap = dynamic(() => import('@/components/ChoroplethMap'), { ssr: false });
 const ScatterMap = dynamic(() => import('@/components/ScatterMap'), { ssr: false });
 
-const HourlyChart = dynamic(() => import('@/components/HourlyChart'), {
-  ssr: false,
-  loading: () => <div className="p-4">Loading Hourly...</div>,
-});
+// Components for the DETAILED section (CSV based)
+const HourlyChart = dynamic(() => import('@/components/HourlyChart'), { ssr: false });
+const CrimeTypeChart = dynamic(() => import('@/components/CrimeTypeChart'), { ssr: false });
+// YearChart and MonthChart components are kept if you need them for specific pages,
+// but for the dashboard we are using direct Plot components for the "Overall" section.
+const MonthChart = dynamic(() => import('@/components/MonthChart'), { ssr: false });
+const DayOfWeekChart = dynamic(() => import('@/components/DayOfWeekChart'), { ssr: false });
 
-const CrimeTypeChart = dynamic(() => import('@/components/CrimeTypeChart'), {
-  ssr: false,
-  loading: () => <div className="p-4">Loading Types...</div>,
-});
+// Generic Plot for the OVERALL section (JSON based)
+const Plot = dynamic(() => import('react-plotly.js'), { ssr: false, loading: () => <p>Loading...</p> });
 
-const YearChart = dynamic(() => import('@/components/YearChart'), {
-  ssr: false,
-  loading: () => <div className="p-4">Loading Years...</div>,
-});
-
-const MonthChart = dynamic(() => import('@/components/MonthChart'), {
-  ssr: false,
-  loading: () => <div className="p-4">Loading Months...</div>,
-});
-
-// NEW: Import DayOfWeekChart
-const DayOfWeekChart = dynamic(() => import('@/components/DayOfWeekChart'), {
-  ssr: false,
-  loading: () => <div className="p-4">Loading Days...</div>,
-});
-
-// --- Configuration ---
-const DATA_FILES = Array.from({ length: 18 }, (_, i) => `/cartodb-query_${i + 1}.csv`);
-
-const MONTHS = [
+// Helper for Month Names
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MONTH_OPTS = [
   { value: '', label: 'All Months' },
   { value: '01', label: 'January' },
   { value: '02', label: 'February' },
@@ -58,220 +43,236 @@ const MONTHS = [
 
 const Home = () => {
   const [currentView, setCurrentView] = useState<'choropleth' | 'bar' | 'scatter'>('choropleth');
-  const [data, setData] = useState<any[]>([]);
+
+  // Data States
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [overallStats, setOverallStats] = useState<any>(null); // Lightweight JSON
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [yearData, setYearData] = useState<any[]>([]); // Heavy CSV (Current Year)
   const [selectedYear, setSelectedYear] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isCsvLoading, setIsCsvLoading] = useState<boolean>(false);
 
-  // --- 1. Fetch & Merge Data (With Memory Optimization) ---
+  // 1. Fetch Overall Stats (Fast)
   useEffect(() => {
-    setIsLoading(true);
-
-    // OPTIMIZATION: Only keep columns we actually use to save memory
-    const rowConverter = (d: any) => ({
-      dispatch_date: d.dispatch_date, // Needed for Year/Month/Day filtering
-      hour: d.hour, // Needed for HourlyChart
-      text_general_code: d.text_general_code, // Needed for CrimeTypeChart
-    });
-
-    const filePromises = DATA_FILES.map((file) => d3.csv(file, rowConverter));
-
-    Promise.all(filePromises)
-      .then((allChunks) => {
-        const mergedData = allChunks.flat();
-
-        // Safety: If data is massive (over 1M rows), take latest 800k to prevent crash
-        // (You can adjust this limit based on your machine's RAM)
-        const finalData = mergedData.length > 800000
-          ? mergedData.slice(0, 800000)
-          : mergedData;
-
-        setData(finalData);
-
-        // Auto-select max year
-        if (finalData.length > 0) {
-          const allYears = finalData
-            .map((d: any) => d.dispatch_date?.split('-')[0])
-            .filter((y: string) => y && !Number.isNaN(Number(y)));
-
-          if (allYears.length > 0) {
-            const maxYear = allYears.reduce((max: number, y: string) => Math.max(max, Number(y)), 0);
-            setSelectedYear(String(maxYear));
-          }
-        }
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error loading CSV files:', err);
-        setIsLoading(false);
-      });
+    d3.json('/overall_stats.json').then((stats: any) => {
+      setOverallStats(stats);
+      // Auto-select latest year found in stats
+      if (stats.years.length > 0) {
+        setSelectedYear(String(stats.years[0].year));
+      }
+    }).catch(err => console.error('Could not load stats. Did you run process-data.js?', err));
   }, []);
 
-  // --- 2. Generate Year Dropdown ---
-  const years = useMemo(() => {
-    if (data.length === 0) return [];
-    const rawYears = data
-      .map((d) => d.dispatch_date?.split('-')[0])
-      .filter((y) => y && !Number.isNaN(Number(y)));
+  // 2. Fetch CSV when Year Changes (Lazy Load)
+  useEffect(() => {
+    if (!selectedYear) return;
 
-    if (rawYears.length === 0) return [];
-    const maxYear = rawYears.reduce((max: number, y: string) => Math.max(max, Number(y)), 0);
-    const minYear = 2006;
+    setIsCsvLoading(true);
+    const fileName = `/crime_${selectedYear}.csv`;
 
-    const yearList: string[] = [];
-    for (let y = maxYear; y >= minYear; y--) {
-      yearList.push(String(y));
-    }
-    return yearList;
-  }, [data]);
+    const rowConverter = (d: any) => ({
+      dispatch_date: d.dispatch_date,
+      hour: d.hour,
+      text_general_code: d.text_general_code,
+    });
 
-  // --- 3. Filter Data ---
+    d3.csv(fileName, rowConverter).then((csvData) => {
+      setYearData(csvData);
+      setIsCsvLoading(false);
+    }).catch((err) => {
+      console.error(`Error loading ${fileName}`, err);
+      setYearData([]);
+      setIsCsvLoading(false);
+    });
+  }, [selectedYear]);
 
-  // A. Year Data (Context for the year)
-  const yearData = useMemo(() => {
-    if (!selectedYear) return [];
-    return data.filter(d => d.dispatch_date?.startsWith(selectedYear));
-  }, [data, selectedYear]);
-
-  // B. Specific Data (Filtered by Year AND Month)
+  // 3. Filter Data for Month Selection
   const filteredData = useMemo(() => {
-    let d = yearData;
-    if (selectedMonth) {
-      d = d.filter(item => {
-        const parts = item.dispatch_date?.split('-');
-        return parts && parts[1] === selectedMonth;
-      });
-    }
-    return d;
+    if (!selectedMonth) return yearData;
+    return yearData.filter(d => {
+      const parts = d.dispatch_date?.split('-');
+      return parts && parts[1] === selectedMonth;
+    });
   }, [yearData, selectedMonth]);
 
-  // --- 4. Render ---
   const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="d-flex justify-content-center align-items-center h-100">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading Data...</span>
-          </div>
-        </div>
-      );
-    }
+    if (!overallStats) return <div className="p-5 text-center">Loading Dashboard...</div>;
+
+    // FIX: Create a sorted copy of years for the chart (Ascending: 2006 -> 2025)
+    // We do this here so the Dropdown can stay Descending (2025 -> 2006) for usability
+    const sortedYearsAsc = [...overallStats.years].sort((a: any, b: any) => Number(a.year) - Number(b.year));
 
     switch (currentView) {
       case 'choropleth': return <ChoroplethMap />;
       case 'scatter': return <ScatterMap />;
       case 'bar':
         return (
-          <div
-            className="container-fluid p-4"
-            style={{ height: '100%', overflowY: 'auto', overflowX: 'hidden' }}
-          >
-            {/* === OVERALL SECTION === */}
-            <h3 className="mb-3 text-primary fw-bold">
-              Overall Trends (
-              {years.length > 0 ? `${years[years.length - 1]} - ${years[0]}` : 'All Time'}
-              )
-            </h3>
+          <div className="container-fluid p-4" style={{ height: '100%', overflowY: 'auto' }}>
 
-            {/* Row 1: Long Term Trends */}
+            {/* === OVERALL SECTION (Powered by JSON) === */}
+            <h3 className="mb-3 text-primary fw-bold">Overall Trends (All Time)</h3>
+
             <Row className="mb-4 g-4">
+              {/* Yearly Trend */}
               <Col lg={6} style={{ minHeight: '400px' }}>
                 <div className="border rounded p-3 shadow-sm h-100 bg-white">
-                  <YearChart data={data} />
+                  <Plot
+                    data={[{
+                      type: 'bar',
+                      // FIX: Use the sorted variable here
+                      x: sortedYearsAsc.map((d: any) => d.year),
+                      y: sortedYearsAsc.map((d: any) => d.count),
+                      marker: { color: '#8884d8' },
+                    }]}
+                    layout={{
+                      title: { text: 'Crimes per Year' },
+                      autosize: true,
+                      margin: { t: 50, b: 40, l: 40, r: 20 },
+                      xaxis: { title: { text: 'Year' }, type: 'category' },
+                    }}
+                    useResizeHandler
+                    style={{ width: '100%', height: '100%' }}
+                    config={{ responsive: true }}
+                  />
                 </div>
               </Col>
+
+              {/* Monthly Seasonality */}
               <Col lg={6} style={{ minHeight: '400px' }}>
                 <div className="border rounded p-3 shadow-sm h-100 bg-white">
-                  <MonthChart data={data} title="Overall Seasonality (Crimes per Month)" />
+                  <Plot
+                    data={[{
+                      type: 'bar',
+                      x: MONTH_NAMES,
+                      y: overallStats.monthly,
+                      marker: { color: '#82ca9d' },
+                    }]}
+                    layout={{
+                      title: { text: 'Overall Seasonality (Crimes per Month)' },
+                      autosize: true,
+                      margin: { t: 50, b: 40, l: 40, r: 20 },
+                    }}
+                    useResizeHandler
+                    style={{ width: '100%', height: '100%' }}
+                    config={{ responsive: true }}
+                  />
                 </div>
               </Col>
             </Row>
 
-            {/* Row 2: Timing Analysis (Day of Week & Hour) */}
-            <Row className="mb-4 g-4">
-              <Col lg={6} style={{ minHeight: '400px' }}>
-                <div className="border rounded p-3 shadow-sm h-100 bg-white">
-                  <DayOfWeekChart data={data} />
-                </div>
-              </Col>
-              <Col lg={6} style={{ minHeight: '400px' }}>
-                <div className="border rounded p-3 shadow-sm h-100 bg-white">
-                  <HourlyChart data={data} />
-                </div>
-              </Col>
-            </Row>
-
-            {/* Row 3: Types */}
             <Row className="mb-5 g-4">
-              <Col lg={12} style={{ minHeight: '400px' }}>
+              {/* Day of Week */}
+              <Col lg={6} style={{ minHeight: '400px' }}>
                 <div className="border rounded p-3 shadow-sm h-100 bg-white">
-                  <CrimeTypeChart data={data} />
+                  <Plot
+                    data={[{
+                      type: 'bar',
+                      x: DAY_NAMES,
+                      y: overallStats.days,
+                      marker: { color: '#ffc658' },
+                    }]}
+                    layout={{
+                      title: { text: 'Incidents by Day of Week' },
+                      autosize: true,
+                      margin: { t: 50, b: 40, l: 40, r: 20 },
+                    }}
+                    useResizeHandler
+                    style={{ width: '100%', height: '100%' }}
+                    config={{ responsive: true }}
+                  />
+                </div>
+              </Col>
+
+              {/* Hourly */}
+              <Col lg={6} style={{ minHeight: '400px' }}>
+                <div className="border rounded p-3 shadow-sm h-100 bg-white">
+                  <Plot
+                    data={[{
+                      type: 'bar',
+                      x: Array.from({ length: 24 }, (_, i) => i),
+                      y: overallStats.hourly,
+                      marker: { color: '#3b82f6' },
+                    }]}
+                    layout={{
+                      title: { text: 'Incidents by Hour (Overall)' },
+                      autosize: true,
+                      margin: { t: 50, b: 40, l: 40, r: 20 },
+                      xaxis: { title: { text: 'Hour (24h)' }, dtick: 1 },
+                    }}
+                    useResizeHandler
+                    style={{ width: '100%', height: '100%' }}
+                    config={{ responsive: true }}
+                  />
                 </div>
               </Col>
             </Row>
 
             <hr className="my-5" />
 
-            {/* === DETAILED BREAKDOWN === */}
-            <div className="d-flex align-items-center mb-3 gap-3 flex-wrap">
+            {/* === DETAILED BREAKDOWN (Powered by CSV) === */}
+            <div className="d-flex align-items-center mb-3 mt-5 gap-3 flex-wrap">
               <h3 className="mb-0 text-success fw-bold">Detailed Breakdown</h3>
-
               <Form.Select
-                style={{ width: '150px', cursor: 'pointer' }}
+                style={{ width: '150px' }}
                 value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
+                onChange={e => setSelectedYear(e.target.value)}
               >
-                {years.map(year => (
-                  <option key={year} value={year}>{year}</option>
+                {/* Note: Dropdown uses the original descending order from JSON, which is standard UI */}
+                {overallStats.years.map((y: any) => (
+                  <option key={y.year} value={y.year}>{y.year}</option>
                 ))}
               </Form.Select>
 
               <Form.Select
-                style={{ width: '150px', cursor: 'pointer' }}
+                style={{ width: '150px' }}
                 value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
+                onChange={e => setSelectedMonth(e.target.value)}
               >
-                {MONTHS.map(m => (
-                  <option key={m.value} value={m.value}>{m.label}</option>
-                ))}
+                {MONTH_OPTS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
               </Form.Select>
             </div>
 
-            <h5 className="mb-3 text-secondary">
-              Stats for:
-              {' '}
-              <span className="fw-bold text-dark">{selectedMonth ? `${MONTHS.find(m => m.value === selectedMonth)?.label} ${selectedYear}` : `All of ${selectedYear}`}</span>
-            </h5>
+            {isCsvLoading ? (
+              <div className="p-5 text-center text-muted">
+                Loading Data for
+                {selectedYear}
+                ...
+              </div>
+            ) : (
+              <>
+                {/* Row 1: Monthly Trend for Year */}
+                <Row className="mb-4 g-4">
+                  <Col lg={12} style={{ minHeight: '400px' }}>
+                    <div className="border rounded p-3 shadow-sm h-100 bg-white">
+                      <MonthChart data={yearData} title={`Monthly Trend (${selectedYear})`} />
+                    </div>
+                  </Col>
+                </Row>
 
-            {/* Filtered Row 1: Context & Timing */}
-            <Row className="mb-4 g-4">
-              {/* FIX: Removed the condition so this chart ALWAYS shows */}
-              <Col lg={12} className="mb-4" style={{ minHeight: '400px' }}>
-                <div className="border rounded p-3 shadow-sm h-100 bg-white">
-                  <MonthChart data={yearData} title={`Monthly Trend (${selectedYear})`} />
-                </div>
-              </Col>
+                {/* Row 2: Charts for Selection */}
+                <Row className="mb-4 g-4">
+                  <Col lg={6} style={{ minHeight: '400px' }}>
+                    <div className="border rounded p-3 shadow-sm h-100 bg-white">
+                      <DayOfWeekChart data={filteredData} />
+                    </div>
+                  </Col>
+                  <Col lg={6} style={{ minHeight: '400px' }}>
+                    <div className="border rounded p-3 shadow-sm h-100 bg-white">
+                      <HourlyChart data={filteredData} />
+                    </div>
+                  </Col>
+                </Row>
 
-              <Col lg={6} style={{ minHeight: '400px' }}>
-                <div className="border rounded p-3 shadow-sm h-100 bg-white">
-                  <DayOfWeekChart data={filteredData} />
-                </div>
-              </Col>
-              <Col lg={6} style={{ minHeight: '400px' }}>
-                <div className="border rounded p-3 shadow-sm h-100 bg-white">
-                  <HourlyChart data={filteredData} />
-                </div>
-              </Col>
-            </Row>
-
-            {/* Filtered Row 2: Types */}
-            <Row className="g-4 pb-5">
-              <Col lg={12} style={{ minHeight: '400px' }}>
-                <div className="border rounded p-3 shadow-sm h-100 bg-white">
-                  <CrimeTypeChart data={filteredData} />
-                </div>
-              </Col>
-            </Row>
+                <Row className="mb-5 g-4">
+                  <Col lg={12} style={{ minHeight: '400px' }}>
+                    <div className="border rounded p-3 shadow-sm h-100 bg-white">
+                      <CrimeTypeChart data={filteredData} />
+                    </div>
+                  </Col>
+                </Row>
+              </>
+            )}
           </div>
         );
       default: return <ChoroplethMap />;
